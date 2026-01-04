@@ -26,7 +26,7 @@ KNOWN_CLASSES = {
 # ---------------- DB ----------------
 def db():
     url = urlparse(os.environ["DATABASE_URL"])
-    return psycopg2.connect(
+    return psycopg.connect(
         dbname=url.path[1:],
         user=url.username,
         password=url.password,
