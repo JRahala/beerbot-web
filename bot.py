@@ -206,4 +206,6 @@ async def leaderboard(ctx):
 def run_bot():
     init_db() # Clears database? on each start
     token=os.environ["DISCORD_TOKEN"]
+    print("Bot is starting...")
     bot.run(token)
+    print("Bot has exited")
