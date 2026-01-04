@@ -6,12 +6,12 @@ from collections import Counter
 USE_POSTGRES = "DATABASE_URL" in os.environ
 
 if USE_POSTGRES:
-    import psycopg2
+    import psycopg
     from urllib.parse import urlparse
 
     def db():
         url = urlparse(os.environ["DATABASE_URL"])
-        return psycopg2.connect(
+        return psycopg.connect(
             dbname=url.path[1:],
             user=url.username,
             password=url.password,

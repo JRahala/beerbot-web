@@ -2,7 +2,7 @@ import os
 import discord
 from discord.ext import commands
 from datetime import datetime, timedelta
-import psycopg2
+import psycopg
 from urllib.parse import urlparse
 
 # ---------------- CONFIG ----------------
