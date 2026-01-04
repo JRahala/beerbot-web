@@ -17,6 +17,7 @@ if USE_POSTGRES:
             password=url.password,
             host=url.hostname,
             port=url.port,
+            sslmode="require",
         )
 else:
     import sqlite3

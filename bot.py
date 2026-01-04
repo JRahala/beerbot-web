@@ -32,6 +32,7 @@ def db():
         password=url.password,
         host=url.hostname,
         port=url.port,
+        sslmode="require",
     )
 
 def init_db():
@@ -69,7 +70,6 @@ def start_of_week():
 intents = discord.Intents.default()
 intents.message_content = True
 bot = commands.Bot(command_prefix="!", intents=intents)
-init_db()
 
 # ---------------- EVENTS ----------------
 @bot.event
@@ -204,5 +204,6 @@ async def leaderboard(ctx):
 
 # ---------------- RUN ----------------
 def run_bot():
+    init_db() # Clears database? on each start
     token=os.environ["DISCORD_TOKEN"]
     bot.run(token)
