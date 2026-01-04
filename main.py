@@ -48,8 +48,9 @@ def run_bot():
         print("⚠️ DISCORD_TOKEN not set, bot cannot start.")
         return
     print("🚀 Starting bot...")
-    asyncio.run(bot.start(token))
-
+    #asyncio.run(bot.start(token))
+    bot.start(token)
+    
 # Run bot in a separate thread
 bot_thread = Thread(target=run_bot, daemon=True)
 bot_thread.start()
