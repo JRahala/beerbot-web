@@ -1,0 +1,185 @@
+2026-01-09 18:28:33,418 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-01-09 18:28:33,451 [INFO] logging in using static token
+2026-01-09 18:28:33,480 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.1.11:10000
+2026-01-09 18:28:33,481 [INFO] [33mPress CTRL+C to quit[0m
+2026-01-09 18:28:34,327 [INFO] Shard ID None has connected to Gateway (Session ID: 18c293674ad1b44010c976f9b40a9b50).
+2026-01-09 18:28:50,988 [INFO] Logged 1 x beer 1 for jasamrit
+2026-01-09 18:28:51,135 [ERROR] Error in drink_command for jasamrit: 404 Not Found (error code: 10062): Unknown interaction
+2026-01-09 18:30:44,493 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-01-09 18:30:44,526 [INFO] logging in using static token
+2026-01-09 18:30:44,551 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.1.11:10000
+2026-01-09 18:30:44,552 [INFO] [33mPress CTRL+C to quit[0m
+2026-01-09 18:30:45,545 [INFO] Shard ID None has connected to Gateway (Session ID: e1b353db198074c6d676eaef7e67bdf0).
+2026-01-09 18:31:07,730 [INFO] Logged 1 x beer 1 for jasamrit
+2026-01-09 18:31:07,903 [ERROR] Error in drink_command for jasamrit: 404 Not Found (error code: 10062): Unknown interaction
+2026-01-09 18:33:11,179 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-01-09 18:33:11,210 [INFO] logging in using static token
+2026-01-09 18:33:11,236 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.1.11:10000
+2026-01-09 18:33:11,237 [INFO] [33mPress CTRL+C to quit[0m
+2026-01-09 18:33:12,245 [INFO] Shard ID None has connected to Gateway (Session ID: 4a6f6f39fb541553cfd346b6ed9675b2).
+2026-01-09 18:33:29,978 [ERROR] Error in drink_command: log_drink_safe() takes from 3 to 4 positional arguments but 6 were given
+2026-01-09 18:33:48,729 [ERROR] Error in register_command: 404 Not Found (error code: 10062): Unknown interaction
+2026-01-09 18:35:33,584 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-01-09 18:35:33,616 [INFO] logging in using static token
+2026-01-09 18:35:33,642 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.1.11:10000
+2026-01-09 18:35:33,643 [INFO] [33mPress CTRL+C to quit[0m
+2026-01-09 18:35:34,505 [INFO] Shard ID None has connected to Gateway (Session ID: 0e1e1243b588b1384c36888312d78f6c).
+2026-01-09 18:35:57,136 [ERROR] Error in drink_command: insert or update on table "drinks" violates foreign key constraint "drinks_server_id_fkey"
+DETAIL:  Key (server_id)=(0) is not present in table "servers".
+
+2026-01-09 18:35:57,320 [ERROR] Ignoring exception in command 'drink'
+Traceback (most recent call last):
+  File "C:\Users\Jasam\Desktop\BeerBot\beerbot-web\bot.py", line 123, in drink_command
+    success, msg = log_drink(interaction.user.id, drink_name, quantity)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\Desktop\BeerBot\beerbot-web\bot.py", line 88, in log_drink
+    execute_query(
+  File "C:\Users\Jasam\Desktop\BeerBot\beerbot-web\bot.py", line 58, in execute_query
+    cur.execute(query, params)
+psycopg2.errors.ForeignKeyViolation: insert or update on table "drinks" violates foreign key constraint "drinks_server_id_fkey"
+DETAIL:  Key (server_id)=(0) is not present in table "servers".
+
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\commands.py", line 859, in _do_call
+    return await self._callback(interaction, **params)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\Desktop\BeerBot\beerbot-web\bot.py", line 127, in drink_command
+    await interaction.response.send_message(f"⚠️ Could not log drink: {e}")
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\interactions.py", line 1051, in send_message
+    response = await adapter.create_interaction_response(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\webhook\async_.py", line 224, in request
+    raise NotFound(response, data)
+discord.errors.NotFound: 404 Not Found (error code: 10062): Unknown interaction
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\tree.py", line 1297, in _call
+    await command._invoke_with_namespace(interaction, namespace)
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\commands.py", line 884, in _invoke_with_namespace
+    return await self._do_call(interaction, transformed_values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\commands.py", line 877, in _do_call
+    raise CommandInvokeError(self, e) from e
+discord.app_commands.errors.CommandInvokeError: Command 'drink' raised an exception: NotFound: 404 Not Found (error code: 10062): Unknown interaction
+2026-01-09 18:37:42,287 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-01-09 18:37:42,328 [INFO] logging in using static token
+2026-01-09 18:37:42,355 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.1.11:10000
+2026-01-09 18:37:42,356 [INFO] [33mPress CTRL+C to quit[0m
+2026-01-09 18:37:43,300 [INFO] Shard ID None has connected to Gateway (Session ID: bba86d5ba0e0a31ae5998f69de5bbfc4).
+2026-01-09 18:37:54,217 [INFO] Registered user jasamrit (937486922652217366)
+2026-01-09 18:37:54,370 [ERROR] Error in register_command: 404 Not Found (error code: 10062): Unknown interaction
+2026-01-09 18:37:54,519 [ERROR] Ignoring exception in command 'register'
+Traceback (most recent call last):
+  File "C:\Users\Jasam\Desktop\BeerBot\beerbot-web\bot.py", line 140, in register_command
+    await interaction.response.send_message(f"✅ {interaction.user} registered!")
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\interactions.py", line 1051, in send_message
+    response = await adapter.create_interaction_response(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\webhook\async_.py", line 224, in request
+    raise NotFound(response, data)
+discord.errors.NotFound: 404 Not Found (error code: 10062): Unknown interaction
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\commands.py", line 859, in _do_call
+    return await self._callback(interaction, **params)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\Desktop\BeerBot\beerbot-web\bot.py", line 143, in register_command
+    await interaction.response.send_message(f"⚠️ Registration failed: {e}")
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\interactions.py", line 1051, in send_message
+    response = await adapter.create_interaction_response(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\webhook\async_.py", line 224, in request
+    raise NotFound(response, data)
+discord.errors.NotFound: 404 Not Found (error code: 10062): Unknown interaction
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\tree.py", line 1297, in _call
+    await command._invoke_with_namespace(interaction, namespace)
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\commands.py", line 884, in _invoke_with_namespace
+    return await self._do_call(interaction, transformed_values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\commands.py", line 877, in _do_call
+    raise CommandInvokeError(self, e) from e
+discord.app_commands.errors.CommandInvokeError: Command 'register' raised an exception: NotFound: 404 Not Found (error code: 10062): Unknown interaction
+2026-01-09 18:39:42,601 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-01-09 18:39:42,625 [INFO] logging in using static token
+2026-01-09 18:39:42,653 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.1.11:10000
+2026-01-09 18:39:42,653 [INFO] [33mPress CTRL+C to quit[0m
+2026-01-09 18:39:43,759 [INFO] Shard ID None has connected to Gateway (Session ID: d186104fbc4af191ef04546b67dfa10c).
+2026-01-09 18:39:57,290 [INFO] Registered user jasamrit (937486922652217366)
+2026-01-09 18:39:57,438 [ERROR] Error in register_command: 404 Not Found (error code: 10062): Unknown interaction
+2026-01-09 18:39:57,614 [ERROR] Failed to send followup: 404 Not Found (error code: 10015): Unknown Webhook
+2026-01-09 18:40:54,931 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-01-09 18:40:54,965 [INFO] logging in using static token
+2026-01-09 18:40:54,990 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.1.11:10000
+2026-01-09 18:40:54,990 [INFO] [33mPress CTRL+C to quit[0m
+2026-01-09 18:40:56,099 [INFO] Shard ID None has connected to Gateway (Session ID: dbed522f104b07900635395087b374dd).
+2026-01-09 18:41:03,239 [INFO] Registered user jasamrit (937486922652217366) in server TrueBlueMinecraft (1454543798066741331)
+2026-01-09 18:41:20,787 [ERROR] Error in drink_command: 404 Not Found (error code: 10062): Unknown interaction
+2026-01-09 18:41:20,930 [ERROR] Ignoring exception in command 'drink'
+Traceback (most recent call last):
+  File "C:\Users\Jasam\Desktop\BeerBot\beerbot-web\bot.py", line 179, in drink_command
+    await interaction.response.send_message(msg)
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\interactions.py", line 1051, in send_message
+    response = await adapter.create_interaction_response(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\webhook\async_.py", line 224, in request
+    raise NotFound(response, data)
+discord.errors.NotFound: 404 Not Found (error code: 10062): Unknown interaction
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\commands.py", line 859, in _do_call
+    return await self._callback(interaction, **params)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\Desktop\BeerBot\beerbot-web\bot.py", line 182, in drink_command
+    await interaction.response.send_message(f"⚠️ Could not log drink: {e}")
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\interactions.py", line 1051, in send_message
+    response = await adapter.create_interaction_response(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\webhook\async_.py", line 224, in request
+    raise NotFound(response, data)
+discord.errors.NotFound: 404 Not Found (error code: 10062): Unknown interaction
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\tree.py", line 1297, in _call
+    await command._invoke_with_namespace(interaction, namespace)
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\commands.py", line 884, in _invoke_with_namespace
+    return await self._do_call(interaction, transformed_values)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\commands.py", line 877, in _do_call
+    raise CommandInvokeError(self, e) from e
+discord.app_commands.errors.CommandInvokeError: Command 'drink' raised an exception: NotFound: 404 Not Found (error code: 10062): Unknown interaction

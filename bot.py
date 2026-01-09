@@ -1,29 +1,58 @@
 import discord
 import psycopg2
 import os
-
 import threading
 from flask import Flask
+import logging
 
-# Set up discord connection
+# ---------------------------
+# Logging
+# ---------------------------
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("beerbot.log", encoding="utf-8"),
+        logging.StreamHandler()
+    ]
+)
+
+def log_action(action: str):
+    logging.info(action)
+
+# ---------------------------
+# Config
+# ---------------------------
 intents = discord.Intents.default()
-intents.message_content=True
+intents.message_content = True
 
-TOKEN = os.getenv('DISCORD_TOKEN')
-if TOKEN: TOKEN = TOKEN.strip()
-
+TOKEN = os.getenv('DISCORD_TOKEN').strip()
 DB_USER = os.getenv('DB_USER')
 DB_PASSWORD = os.getenv('DB_PASSWORD')
 DB_HOST = os.getenv('DB_HOST')
 DB_NAME = "beerbot_db"
 
-client = discord.Client(intents=intents)
+# ---------------------------
+# Discord Client
+# ---------------------------
+class BeerBotClient(discord.Client):
+    def __init__(self):
+        super().__init__(intents=intents)
+        self.tree = discord.app_commands.CommandTree(self)
 
-# DB functionality
+client = BeerBotClient()
+
+# ---------------------------
+# DB helpers
+# ---------------------------
 def execute_query(query, params=None, fetch=False):
-    """Atomic DB helper: open connection, execute query, optionally fetch results"""
     with psycopg2.connect(
-        host=DB_HOST, dbname=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=5432, sslmode="require"
+        host=DB_HOST,
+        dbname=DB_NAME,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        port=5432,
+        sslmode="require"
     ) as conn:
         with conn.cursor() as cur:
             cur.execute(query, params)
@@ -31,150 +60,172 @@ def execute_query(query, params=None, fetch=False):
                 return cur.fetchall()
             conn.commit()
 
-def register_user(discord_id, username):
-    query = """
-    INSERT INTO users (discord_id, username)
-    VALUES (%s, %s)
-    ON CONFLICT (discord_id) DO NOTHING
-    RETURNING id;
-    """
-    result = execute_query(query, (discord_id, username), fetch=True)
-    return result[0][0] if result else None
-
-def log_drink(discord_id, drink_name, quantity=1):
-    # Get user id
-    user = execute_query("SELECT id FROM users WHERE discord_id=%s;", (discord_id,), fetch=True)
-    if not user:
-        return False, "You must register first using $register"
-    user_id = user[0][0]
-
-    # Insert drink
+def ensure_server(server_id, server_name):
+    """Ensure server exists in DB."""
     execute_query(
-        "INSERT INTO drinks (user_id, drink_name, quantity) VALUES (%s, %s, %s);",
-        (user_id, drink_name, quantity)
+        "INSERT INTO servers (id, name) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
+        (server_id, server_name)
     )
-    return True, f"Logged {quantity} x {drink_name} for your account"
 
-def get_leaderboard():
+def register_user(discord_id, username, server_id=None, server_name=None):
+    """Register user and optionally server, return user_id"""
+    if server_id:
+        ensure_server(server_id, server_name)
+
     rows = execute_query(
-        "SELECT username, drinks_this_week FROM weekly_leaderboard;", fetch=True
+        "INSERT INTO users (discord_id, username) VALUES (%s, %s) "
+        "ON CONFLICT (discord_id) DO UPDATE SET username=EXCLUDED.username "
+        "RETURNING id;",
+        (discord_id, username),
+        fetch=True
     )
-    if not rows:
-        return "No drinks logged this week."
-    msg = "**Weekly Leaderboard:**\n"
-    for i, (username, count) in enumerate(rows, start=1):
-        msg += f"{i}. {username}: {count} drinks\n"
-    return msg
+    user_id = rows[0][0]
 
-def get_history(discord_id):
-    user = execute_query("SELECT id FROM users WHERE discord_id=%s;", (discord_id,), fetch=True)
+    if server_id:
+        # link user to server
+        execute_query(
+            "INSERT INTO server_members (user_id, server_id) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
+            (user_id, server_id)
+        )
+
+    log_action(f"Registered user {username} ({discord_id})")
+    return user_id
+
+def log_drink(discord_id, server_id, server_name, drink_name, quantity=1):
+    # Ensure server exists
+    ensure_server(server_id, server_name)
+
+    # Check user
+    user = execute_query(
+        "SELECT id FROM users WHERE discord_id=%s;", 
+        (discord_id,), fetch=True
+    )
     if not user:
-        return "You must register first using $register"
-    user_id = user[0][0]
+        # Auto-register user for this server
+        user_id = register_user(discord_id, f"User#{discord_id}", server_id, server_name)
+    else:
+        user_id = user[0][0]
 
-    rows = execute_query(
-        "SELECT drink_name, quantity, created_at FROM drinks WHERE user_id=%s ORDER BY created_at DESC;",
-        (user_id,), fetch=True
+    # Log drink
+    execute_query(
+        "INSERT INTO drinks (user_id, server_id, drink_name, quantity) VALUES (%s, %s, %s, %s);",
+        (user_id, server_id, drink_name, quantity)
     )
-    if not rows:
-        return "You have no drink history."
-    
-    msg = "**Your Drink History:**\n"
-    for drink_name, quantity, created_at in rows:
-        msg += f"{created_at.date()}: {quantity} x {drink_name}\n"
-    return msg
+    return True, f"Logged {quantity} x {drink_name} 🍺"
 
-# End of DB helpers
 
-print("Connecting to db...")
-
-# Setup postgres python connection
-conn = psycopg2.connect(
-    host=DB_HOST,  
-    dbname=DB_NAME,
-    user=DB_USER,
-    password=DB_PASSWORD,
-    port=5432,
-    sslmode="require"  # must have for Render
-)
-cur = conn.cursor()
-cur.close()
-
-print("Connected to db!")
-
-# Setup web server
+# ---------------------------
+# Web server
+# ---------------------------
 app = Flask(__name__)
-
 @app.route("/")
 def home():
     return "Beerbot is running!"
 
 def run_web():
-    port=int(os.environ.get("PORT", 10000))
+    port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
 
-# Discord events
+# ---------------------------
+# Commands
+# ---------------------------
+@client.tree.command(name="register", description="Register your account ✅")
+async def register_command(interaction: discord.Interaction):
+    try:
+        # Acknowledge the interaction immediately
+        await interaction.response.defer(thinking=True)
+
+        # Ensure server exists
+        execute_query(
+            "INSERT INTO servers (id, name) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
+            (interaction.guild.id, interaction.guild.name)
+        )
+
+        # Ensure user exists and link to server
+        user_id = execute_query(
+            "INSERT INTO users (discord_id, username) VALUES (%s, %s) "
+            "ON CONFLICT (discord_id) DO UPDATE SET username=EXCLUDED.username RETURNING id;",
+            (interaction.user.id, str(interaction.user)), fetch=True
+        )[0][0]
+
+        execute_query(
+            "INSERT INTO server_members (user_id, server_id) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
+            (user_id, interaction.guild.id)
+        )
+
+        # Send followup after all DB ops
+        await interaction.followup.send(f"✅ {interaction.user} registered in {interaction.guild.name}!")
+
+        logging.info(f"Registered user {interaction.user} ({interaction.user.id}) in server {interaction.guild.name} ({interaction.guild.id})")
+
+    except Exception as e:
+        logging.error(f"Error in register_command: {e}")
+        try:
+            await interaction.followup.send(f"⚠️ Registration failed: {e}")
+        except Exception as e2:
+            logging.error(f"Failed to send followup: {e2}")
+
+@client.tree.command(name="drink", description="Log a drink 🍺")
+@discord.app_commands.describe(drink_name="Name of the drink", quantity="Quantity (default 1)")
+async def drink_command(interaction: discord.Interaction, drink_name: str, quantity: int = 1):
+    try:
+        # Defer immediately to prevent 404
+        await interaction.response.defer(thinking=True)
+
+        # Check if user exists
+        user_row = execute_query(
+            "SELECT id FROM users WHERE discord_id=%s;", 
+            (interaction.user.id,), fetch=True
+        )
+        if not user_row:
+            # User not registered
+            await interaction.followup.send(
+                f"⚠️ You are not registered yet! Please use `/register` first before logging drinks."
+            )
+            return
+
+        user_id = user_row[0][0]
+
+        # Ensure server exists
+        execute_query(
+            "INSERT INTO servers (id, name) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
+            (interaction.guild.id, interaction.guild.name)
+        )
+
+        # Link user to server if missing
+        execute_query(
+            "INSERT INTO server_members (user_id, server_id) VALUES (%s, %s) ON CONFLICT DO NOTHING;",
+            (user_id, interaction.guild.id)
+        )
+
+        # Log the drink
+        execute_query(
+            "INSERT INTO drinks (user_id, server_id, drink_name, quantity) VALUES (%s, %s, %s, %s);",
+            (user_id, interaction.guild.id, drink_name, quantity)
+        )
+
+        await interaction.followup.send(f"🍺 Logged {quantity} x {drink_name} for {interaction.user}!")
+
+        logging.info(f"Logged drink {quantity}x {drink_name} for {interaction.user} ({user_id}) in server {interaction.guild.id}")
+
+    except Exception as e:
+        logging.error(f"Error in drink_command: {e}")
+        try:
+            await interaction.followup.send(f"⚠️ Could not log drink due to an error: {e}")
+        except Exception as e2:
+            logging.error(f"Failed to send followup: {e2}")
+
+# ---------------------------
+# on_ready
+# ---------------------------
 @client.event
 async def on_ready():
+    await client.tree.sync()
     print(f"Beerbot logged in as {client.user}")
 
-# Command handlers (for event handler)
-async def handle_hello(msg):
-    await msg.channel.send(f"👋 Hello {msg.author}! Beerbot is here to keep track of your drinks 🍻")
-
-async def handle_register(msg):
-    user_id = register_user(msg.author.id, str(msg.author))
-    if user_id:
-        await msg.channel.send(f"✅ Registered {msg.author}! Get ready to track your 🍺 adventures!")
-    else:
-        await msg.channel.send(f"⚠️ {msg.author}, you are already registered! Let's keep drinking 🍻")
-
-async def handle_drink(msg):
-    parts = msg.content.strip().split()
-    if len(parts) < 2:
-        await msg.channel.send("Usage: `$drink <drink_name> [quantity]` 🍹")
-        return
-
-    # Support multi-word drink names: all except last token if numeric
-    if len(parts) > 2 and parts[-1].isdigit():
-        quantity = int(parts[-1])
-        drink_name = " ".join(parts[1:-1])
-    else:
-        quantity = 1
-        drink_name = " ".join(parts[1:])
-
-    success, response = log_drink(msg.author.id, drink_name, quantity)
-    emoji = "🍺" if success else "⚠️"
-    await msg.channel.send(f"{emoji} {response}")
-
-async def handle_leaderboard(msg):
-    leaderboard = get_leaderboard()
-    leaderboard_msg = f"🏆 **Weekly Leaderboard** 🏆\n{leaderboard}"
-    await msg.channel.send(leaderboard_msg)
-
-async def handle_history(msg):
-    history = get_history(msg.author.id)
-    history_msg = f"📜 **Your Drink History** 📜\n{history}"
-    await msg.channel.send(history_msg)
-
-# Message event handler
-@client.event
-async def on_message(msg):
-    if msg.author == client.user: return
-    content = msg.content.strip().lower()
-    if content.startswith("$hello"):
-        await handle_hello(msg)
-    elif content.startswith("$register"):
-        await handle_register(msg)
-    elif content.startswith("$drink"):
-        await handle_drink(msg)
-    elif content.startswith("$leaderboard"):
-        await handle_leaderboard(msg)
-    elif content.startswith("$history"):
-        await handle_history(msg)
-
-
-# Driver code
+# ---------------------------
+# Driver
+# ---------------------------
 if __name__ == "__main__":
     threading.Thread(target=run_web, daemon=True).start()
     client.run(TOKEN)

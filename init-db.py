@@ -9,41 +9,77 @@ DB_NAME = "beerbot_db"
 if not (DB_USER and DB_PASSWORD and DB_HOST):
     raise EnvironmentError("Make sure DB_USER, DB_PASSWORD, and DB_HOST are set")
 
-# Create table and leaderboard view
 INIT_SQL = """
--- Users table
-CREATE TABLE IF NOT EXISTS users (
+-- Users table (same account across servers)
+CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     discord_id BIGINT UNIQUE NOT NULL,
     username TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Servers table
+CREATE TABLE servers (
+    id BIGINT PRIMARY KEY,
+    name TEXT NOT NULL
+);
+
+-- User-Server association
+CREATE TABLE server_members (
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    server_id BIGINT REFERENCES servers(id) ON DELETE CASCADE,
+    joined_at TIMESTAMP DEFAULT NOW(),
+    PRIMARY KEY (user_id, server_id)
+);
+
 -- Drinks table
-CREATE TABLE IF NOT EXISTS drinks (
+CREATE TABLE drinks (
     id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    server_id BIGINT REFERENCES servers(id) ON DELETE CASCADE,
     drink_name TEXT NOT NULL,
     quantity INT DEFAULT 1,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
--- Weekly leaderboard view
+-- Leaderboard view per server
 CREATE OR REPLACE VIEW weekly_leaderboard AS
-SELECT u.username,
-       COUNT(d.id) AS drinks_this_week
-FROM users u
-LEFT JOIN drinks d
-  ON u.id = d.user_id
- AND d.created_at >= date_trunc('week', NOW())
-GROUP BY u.username
-ORDER BY drinks_this_week DESC;
+SELECT s.id AS server_id, u.username, SUM(d.quantity) AS drinks_this_week
+FROM drinks d
+JOIN users u ON d.user_id = u.id
+JOIN servers s ON d.server_id = s.id
+WHERE d.created_at >= date_trunc('week', NOW())
+GROUP BY s.id, u.username
+ORDER BY s.id, drinks_this_week DESC;
+
 """
 
-
 def init_db():
-    print("Connecting to database...")
     try:
+        print("Connecting to default database to recreate beerbot_db...")
+        conn = psycopg2.connect(
+            host=DB_HOST,
+            dbname="postgres",
+            user=DB_USER,
+            password=DB_PASSWORD,
+            port=5432,
+            sslmode="require"
+        )
+
+        # **Important:** enable autocommit before executing DROP/CREATE
+        conn.autocommit = True
+
+        with conn.cursor() as cur:
+            cur.execute(f"DROP DATABASE IF EXISTS {DB_NAME};")
+            print(f"Dropped database {DB_NAME} if it existed.")
+
+            cur.execute(f"CREATE DATABASE {DB_NAME};")
+            print(f"Created new database {DB_NAME}.")
+
+        conn.close()
+
+        # Connect to the new database to initialize tables
+        print(f"Connecting to new database {DB_NAME} to create tables...")
         with psycopg2.connect(
             host=DB_HOST,
             dbname=DB_NAME,
@@ -52,11 +88,10 @@ def init_db():
             port=5432,
             sslmode="require"
         ) as conn:
-            print("Connected to db!")
             with conn.cursor() as cur:
                 cur.execute(INIT_SQL)
                 conn.commit()
-                print("Database initialized successfully!")
+                print("Tables and views created successfully!")
 
     except Exception as e:
         print("Error initializing database:", e)
