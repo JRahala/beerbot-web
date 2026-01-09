@@ -1,4 +1,0 @@
-discord.py==2.6.4
-flask>=3.0,<3.2
-psycopg[binary]>=3.2,<3.4
-waitress==2.1.2
