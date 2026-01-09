@@ -183,3 +183,15 @@ Traceback (most recent call last):
   File "C:\Users\Jasam\AppData\Roaming\Python\Python312\site-packages\discord\app_commands\commands.py", line 877, in _do_call
     raise CommandInvokeError(self, e) from e
 discord.app_commands.errors.CommandInvokeError: Command 'drink' raised an exception: NotFound: 404 Not Found (error code: 10062): Unknown interaction
+2026-01-09 18:42:41,892 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-01-09 18:42:41,925 [INFO] logging in using static token
+2026-01-09 18:42:41,951 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:10000
+ * Running on http://192.168.1.11:10000
+2026-01-09 18:42:41,951 [INFO] [33mPress CTRL+C to quit[0m
+2026-01-09 18:42:43,038 [INFO] Shard ID None has connected to Gateway (Session ID: e6af0d563ca2da03e04474d64f6822e6).
+2026-01-09 18:42:58,878 [INFO] Logged drink 1x beer 1 for jasamrit (1) in server 1454543798066741331
+2026-01-09 18:43:10,368 [INFO] Registered user jasamrit (937486922652217366) in server TrueBlueMinecraft (1454543798066741331)
+2026-01-09 18:48:57,035 [WARNING] PyNaCl is not installed, voice will NOT be supported
+2026-01-09 18:50:13,306 [WARNING] PyNaCl is not installed, voice will NOT be supported
